@@ -83,8 +83,8 @@ namespace mongo {
             out << "   idx miss \t- percent of btree page misses (sampled)\n";
             out << "   qr|qw    \t- queue lengths for clients waiting (read|write)\n";
             out << "   ar|aw    \t- active clients (read|write)\n";
-            out << "   netIn    \t- network traffic in - bits\n";
-            out << "   netOut   \t- network traffic out - bits\n";
+            out << "   netIn    \t- network traffic in - bytes\n";
+            out << "   netOut   \t- network traffic out - bytes\n";
             out << "   conn     \t- number of open connections\n";
             out << "   set      \t- replica set name\n";
             out << "   repl     \t- replication type \n";
@@ -288,7 +288,7 @@ namespace mongo {
             string password;
         };
 
-        static void serverThread( shared_ptr<ServerState> state , int sleepTime) {
+        static void serverThread( shared_ptr<ServerState> state ) {
             try {
                 DBClientConnection conn( true );
                 conn._logLevel = 1;
@@ -335,7 +335,7 @@ namespace mongo {
                         state->error = e.what();
                     }
 
-                    sleepsecs( sleepTime );
+                    sleepsecs( 1 );
                 }
 
 
@@ -357,10 +357,7 @@ namespace mongo {
 
             state.reset( new ServerState() );
             state->host = host;
-            /* For each new thread, pass in a thread state object and the delta between samples */
-            state->thr.reset( new boost::thread( boost::bind( serverThread,
-                                                              state,
-                                                              (int)ceil(_statUtil.getSeconds()) ) ) );
+            state->thr.reset( new boost::thread( boost::bind( serverThread , state ) ) );
             state->username = _username;
             state->password = _password;
 
